@@ -5,15 +5,19 @@ import cn.springlogic.communicate.service.AliYunSmsService;
 import cn.springlogic.communicate.service.VerificationService;
 import cn.springlogic.communicate.util.CommUtil;
 import cn.springlogic.user.jpa.entity.User;
+import cn.springlogic.user.jpa.entity.UserModel;
+import cn.springlogic.user.jpa.repository.UserRepository;
 import cn.springlogic.user.service.UserService;
 import com.aliyuncs.exceptions.ClientException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fitcooker.app.BussinessException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -24,7 +28,7 @@ import java.util.Map;
  * Created by admin on 2017/4/20.
  */
 @Controller
-@RequestMapping("/user")
+@RequestMapping("/api/user")
 public class UserController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserController.class);
@@ -37,6 +41,8 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private UserRepository userRepository;
 
     /**
      * 注册
@@ -132,7 +138,7 @@ public class UserController {
 
             return ResponseEntity.ok("发送验证码成功!");
         } catch (ClientException e) {
-            LOGGER.error("发送验证码失败!",e);
+            LOGGER.error("发送验证码失败!", e);
             e.printStackTrace();
         } catch (JsonProcessingException e) {
             e.printStackTrace();
@@ -141,31 +147,31 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("发送验证码失败");
     }
 
-    @RequestMapping(value = "/resetpwd", method = RequestMethod.PATCH)
-    public ResponseEntity<String> resetPwd(Verification verification, User user) {
+    @RequestMapping(value = "/forgetpwd", method = RequestMethod.PATCH)
+    public ResponseEntity<String> resetPwd2(@RequestBody Map<String,String> map) {
 
         try {
          /*检查验证码时效性,大于两分钟 失效*/
-            boolean timeVerify = verificationService.timeVerify(verification.getTarget(), verification.getType());
+            boolean timeVerify = verificationService.timeVerify(map.get("phone"), Verification.TYPE_SMS);
             if (!timeVerify) {
                 LOGGER.error("验证码失效!");
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("验证码失效!");
             }
 
          /*检查验证码正确性*/
-            Verification tempVerify = verificationService.findBytargetAndtypeAndCode(verification.getTarget(), verification.getType(), verification.getCode());
+            Verification tempVerify = verificationService.findBytargetAndtypeAndCode(map.get("phone"), Verification.TYPE_SMS, map.get("code"));
             if (tempVerify != null) {
 
 
                 /*验证码正确,根据手机号找到该用户*/
-                User tempUser = userService.findByPhone(verification.getTarget());
-                if(tempUser==null){
+                User tempUser = userService.findByPhone(map.get("phone"));
+                if (tempUser == null) {
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("找不到该用户!");
                 }
 
                 /*重置修改用户密码*/
 
-                userService.resetPwd(user.getPassword(), verification.getTarget());
+                userService.resetPwd(map.get("password"), map.get("phone"));
 
                 return ResponseEntity.ok("重置密码成功!");
             } else {
@@ -179,5 +185,19 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("重置密码失败!");
     }
 
+    @RequestMapping(value = "/resetpwd", method = RequestMethod.PATCH)
+    public ResponseEntity<Object> resetPwd(@RequestBody UserModel userModel) throws BussinessException {
 
+        try {
+            int i = userRepository.updatePwd(userModel.getNewPassword(), userModel.getOldPassword(), userModel.getId());
+            if (i == 0) {
+                throw new BussinessException("请输入正确的原密码");
+            }
+            return ResponseEntity.ok(userModel);
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
 }

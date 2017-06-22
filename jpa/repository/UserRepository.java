@@ -93,6 +93,11 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @Query("update User u set u.password = ?1 where u.phone = ?2")
     int update(String password , String phone);
 
+    @Modifying
+    @Transactional
+    @Query("update User u set u.password = ?1 where u.password = ?2 and u.id=?3")
+    int updatePwd(String newPassword , String oldPassword,Integer userId);
+
 
 
     @RestResource(path = "admin",rel ="admin")

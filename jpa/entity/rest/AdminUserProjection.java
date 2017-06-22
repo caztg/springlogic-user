@@ -3,11 +3,10 @@ package cn.springlogic.user.jpa.entity.rest;
 import cn.springlogic.user.jpa.entity.Role;
 import cn.springlogic.user.jpa.entity.User;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fitcooker.app.AppDataPreFixSerializer;
+import com.fitcooker.app.serializer.AppDataPreFixSerializer;
 import org.springframework.data.rest.core.config.Projection;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 
 /**

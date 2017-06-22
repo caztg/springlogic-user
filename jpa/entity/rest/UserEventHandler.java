@@ -12,7 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.rest.core.annotation.*;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -53,6 +55,7 @@ public class UserEventHandler {
         user.setStatus("1");
 
         Role role = roleRepository.findByName("ROLE_USER");
+       // List<Role> userRoles=new ArrayList<>();
         Set<Role> userRoles=new HashSet<>();
         userRoles.add(role);
         user.setRoles(userRoles);

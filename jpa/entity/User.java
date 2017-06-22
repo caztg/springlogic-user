@@ -6,14 +6,13 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
 import org.hibernate.annotations.*;
+import org.hibernate.annotations.CascadeType;
 
 
 import javax.persistence.*;
 import javax.persistence.Entity;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by figo-007 on 2017/4/6.
@@ -57,12 +56,13 @@ public class User {
 
 
     @ManyToMany(fetch = FetchType.EAGER)
-    @Cascade(org.hibernate.annotations.CascadeType.SAVE_UPDATE)
+    @Cascade(CascadeType.SAVE_UPDATE)
     @JoinTable(name = "user_role",
             joinColumns = {@JoinColumn(name = "user_id",referencedColumnName = "id")},//JoinColumns定义本方在中间表的主键映射
             inverseJoinColumns = {@JoinColumn(name = "role_id",referencedColumnName = "id")})//inverseJoinColumns定义另一在中间表的主键映射
 
    // @JsonManagedReference  // 配置后,反序列化失败.
+   // @Fetch(FetchMode.SUBSELECT)
     private Set<Role> roles=new HashSet<>();
 
 
